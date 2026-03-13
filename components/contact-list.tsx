@@ -24,10 +24,10 @@ export function ContactList({ contacts }: { contacts: Contact[] }) {
                 : ""
             }`}
           >
-            <span className="w-[120px] shrink-0 text-[13px] text-amber-dim">
+            <span className="w-20 sm:w-30 shrink-0 text-[12px] sm:text-[13px] text-amber-dim">
               {contact.label}
             </span>
-            <span className="mr-3 text-amber-dim">::</span>
+            <span className="mr-2 sm:mr-3 text-amber-dim">::</span>
             <a
               href={contact.href}
               {...(!contact.href.startsWith("mailto:") && {

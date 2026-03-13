@@ -19,8 +19,9 @@ export function StatusBar() {
   }, []);
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-[1000] flex justify-between bg-amber px-4 py-[3px] font-mono text-xs text-bg">
-      <span>IGOR PUGACHEV — FULLSTACK DEVELOPER</span>
+    <div className="fixed bottom-0 left-0 right-0 z-[1000] flex justify-between bg-amber px-2 sm:px-4 py-0.75 font-mono text-[10px] sm:text-xs text-bg">
+      <span className="hidden sm:inline">IGOR PUGACHEV — FULLSTACK DEVELOPER</span>
+      <span className="sm:hidden">IGOR PUGACHEV</span>
       <span>{clock}</span>
     </div>
   );

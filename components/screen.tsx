@@ -11,7 +11,7 @@ export function Screen({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <div className="relative z-[1] mx-auto flex min-h-screen max-w-[860px] animate-[flicker_8s_infinite] flex-col justify-center px-6 py-20">
+    <div className="relative z-[1] mx-auto flex min-h-screen max-w-[860px] animate-[flicker_8s_infinite] flex-col justify-center px-4 py-10 sm:px-6 sm:py-20">
       <BootSequence onComplete={handleBootComplete} />
 
       <div

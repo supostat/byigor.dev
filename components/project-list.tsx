@@ -19,7 +19,7 @@ export function ProjectList({ projects }: { projects: Project[] }) {
         {projects.map((project, index) => (
           <div
             key={project.name}
-            className={`grid grid-cols-[1fr_auto] items-start gap-2 p-[14px_18px] transition-colors hover:bg-amber-glow ${
+            className={`p-3 sm:grid sm:grid-cols-[1fr_auto] sm:items-start sm:gap-2 sm:p-[14px_18px] transition-colors hover:bg-amber-glow ${
               index < projects.length - 1
                 ? "border-b border-[rgba(255,176,0,0.15)]"
                 : ""
@@ -27,7 +27,7 @@ export function ProjectList({ projects }: { projects: Project[] }) {
           >
             <div>
               <div className="mb-1 flex items-baseline gap-2.5">
-                <span className="text-xs text-amber-dim">drwxr-xr-x</span>
+                <span className="hidden sm:inline text-xs text-amber-dim">drwxr-xr-x</span>
                 <span className="text-[15px] tracking-[0.5px] text-amber-bright transition-[text-shadow] hover:[text-shadow:0_0_8px_var(--color-amber)]">
                   {project.name}/
                 </span>
@@ -44,7 +44,7 @@ export function ProjectList({ projects }: { projects: Project[] }) {
                 → {project.link.replace("https://", "")}
               </a>
             </div>
-            <div className="flex flex-col items-end gap-1">
+            <div className="mt-2 flex flex-wrap gap-1 sm:mt-0 sm:flex-col sm:items-end">
               {project.tags.map((tag) => (
                 <span
                   key={tag}
