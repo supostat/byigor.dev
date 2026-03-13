@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="glow-soft">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <pattern id="scanlines" width="1" height="4" patternUnits="userSpaceOnUse">
+      <rect width="1" height="2" fill="transparent"/>
+      <rect y="2" width="1" height="2" fill="rgba(0,0,0,0.3)"/>
+    </pattern>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#0A0800"/>
+
+  <!-- Vignette -->
+  <radialGradient id="vignette" cx="50%" cy="50%" r="70%">
+    <stop offset="0%" stop-color="transparent"/>
+    <stop offset="100%" stop-color="rgba(0,0,0,0.7)"/>
+  </radialGradient>
+  <rect width="1200" height="630" fill="url(#vignette)"/>
+
+  <!-- Scanlines -->
+  <rect width="1200" height="630" fill="url(#scanlines)" opacity="0.4"/>
+
+  <!-- ASCII Art BYIGOR.DEV -->
+  <g filter="url(#glow)" font-family="monospace" font-size="14" fill="#FFD060">
+    <text x="600" y="175" text-anchor="middle" xml:space="preserve"> ██████╗ ██╗   ██╗██╗ ██████╗  ██████╗ ██████╗     ██████╗ ███████╗██╗   ██╗</text>
+    <text x="600" y="193" text-anchor="middle" xml:space="preserve"> ██╔══██╗╚██╗ ██╔╝██║██╔════╝ ██╔═══██╗██╔══██╗    ██╔══██╗██╔════╝██║   ██║</text>
+    <text x="600" y="211" text-anchor="middle" xml:space="preserve"> ██████╔╝ ╚████╔╝ ██║██║  ███╗██║   ██║██████╔╝    ██║  ██║█████╗  ██║   ██║</text>
+    <text x="600" y="229" text-anchor="middle" xml:space="preserve"> ██╔══██╗  ╚██╔╝  ██║██║   ██║██║   ██║██╔══██╗    ██║  ██║██╔══╝  ╚██╗ ██╔╝</text>
+    <text x="600" y="247" text-anchor="middle" xml:space="preserve"> ██████╔╝   ██║   ██║╚██████╔╝╚██████╔╝██║  ██║ ██╗██████╔╝███████╗ ╚████╔╝ </text>
+    <text x="600" y="265" text-anchor="middle" xml:space="preserve"> ╚═════╝    ╚═╝   ╚═╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═╝ ╚═╝╚═════╝ ╚══════╝  ╚═══╝ </text>
+  </g>
+
+  <!-- Subtitle -->
+  <text x="600" y="320" text-anchor="middle" font-family="monospace" font-size="18" fill="#A87400" filter="url(#glow-soft)">[ PUGACHEV // FULLSTACK DEVELOPER // byigor.dev ]</text>
+
+  <!-- Separator -->
+  <line x1="350" y1="360" x2="850" y2="360" stroke="#A87400" stroke-width="1" opacity="0.3"/>
+
+  <!-- Description -->
+  <text x="600" y="415" text-anchor="middle" font-family="monospace" font-size="16" fill="#A87400">Builds things end-to-end. No layer is foreign territory.</text>
+
+  <!-- Border -->
+  <rect x="40" y="40" width="1120" height="550" fill="none" stroke="#A87400" stroke-width="1" opacity="0.3" rx="2"/>
+
+  <!-- Corner decorations -->
+  <text x="60" y="75" font-family="monospace" font-size="14" fill="#A87400" opacity="0.5">┌──</text>
+  <text x="1090" y="75" font-family="monospace" font-size="14" fill="#A87400" opacity="0.5" text-anchor="end">──┐</text>
+  <text x="60" y="575" font-family="monospace" font-size="14" fill="#A87400" opacity="0.5">└──</text>
+  <text x="1090" y="575" font-family="monospace" font-size="14" fill="#A87400" opacity="0.5" text-anchor="end">──┘</text>
+</svg>

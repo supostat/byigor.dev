@@ -19,7 +19,23 @@ const vt323 = VT323({
 export const metadata: Metadata = {
   title: "byigor.dev — Igor Pugachev",
   description:
-    "Fullstack developer. Building from database to interface.",
+    "Fullstack developer. Builds things end-to-end. No layer is foreign territory.",
+  metadataBase: new URL("https://byigor.dev"),
+  openGraph: {
+    title: "byigor.dev — Igor Pugachev",
+    description:
+      "Fullstack developer. Builds things end-to-end. No layer is foreign territory.",
+    url: "https://byigor.dev",
+    siteName: "byigor.dev",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "byigor.dev — Igor Pugachev",
+    description:
+      "Fullstack developer. Builds things end-to-end. No layer is foreign territory.",
+  },
 };
 
 export default function RootLayout({
