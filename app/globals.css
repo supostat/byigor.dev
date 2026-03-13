@@ -1,0 +1,90 @@
+@import "tailwindcss";
+
+@theme {
+  --font-mono: var(--font-share-tech-mono), monospace;
+  --font-display: var(--font-vt323), monospace;
+
+  --color-amber: #FFB000;
+  --color-amber-dim: #A87400;
+  --color-amber-bright: #FFD060;
+  --color-amber-glow: rgba(255, 176, 0, 0.15);
+  --color-bg: #0A0800;
+  --color-scanline: rgba(0, 0, 0, 0.35);
+}
+
+html,
+body {
+  background: var(--color-bg);
+  color: var(--color-amber);
+  font-family: var(--font-mono);
+  font-size: 15px;
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* CRT scanlines overlay */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    var(--color-scanline) 2px,
+    var(--color-scanline) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.4;
+}
+
+/* CRT vignette overlay */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 60%,
+    rgba(0, 0, 0, 0.7) 100%
+  );
+  pointer-events: none;
+  z-index: 9998;
+}
+
+/* Phosphor flicker */
+@keyframes flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  92% {
+    opacity: 1;
+  }
+  93% {
+    opacity: 0.85;
+  }
+  94% {
+    opacity: 1;
+  }
+  96% {
+    opacity: 0.9;
+  }
+  97% {
+    opacity: 1;
+  }
+}
+
+/* Cursor blink */
+@keyframes blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
