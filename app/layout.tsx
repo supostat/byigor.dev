@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Share_Tech_Mono, VT323 } from "next/font/google";
+import { FaviconBlink } from "@/components/favicon-blink";
 import "./globals.css";
 
 const shareTechMono = Share_Tech_Mono({
@@ -17,6 +18,9 @@ const vt323 = VT323({
 });
 
 export const metadata: Metadata = {
+  icons: {
+    icon: "/favicon.svg",
+  },
   title: "byigor.dev — Igor Pugachev",
   description:
     "Fullstack developer. Builds things end-to-end. No layer is foreign territory.",
@@ -45,7 +49,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${shareTechMono.variable} ${vt323.variable}`}>
-      <body>{children}</body>
+      <body>
+          <FaviconBlink />
+          {children}
+        </body>
     </html>
   );
 }
