@@ -21,12 +21,12 @@ export const metadata: Metadata = {
   icons: {
     icon: "/favicon.svg",
   },
-  title: "byigor.dev — Igor Pugachev",
+  title: ">_ byigor.dev",
   description:
     "Fullstack developer. Builds things end-to-end. No layer is foreign territory.",
   metadataBase: new URL("https://byigor.dev"),
   openGraph: {
-    title: "byigor.dev — Igor Pugachev",
+    title: ">_ byigor.dev",
     description:
       "Fullstack developer. Builds things end-to-end. No layer is foreign territory.",
     url: "https://byigor.dev",
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "byigor.dev — Igor Pugachev",
+    title: ">_ byigor.dev",
     description:
       "Fullstack developer. Builds things end-to-end. No layer is foreign territory.",
   },
