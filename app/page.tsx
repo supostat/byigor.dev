@@ -16,6 +16,20 @@ const PROJECTS = [
     link: "https://github.com/supostat/zodra",
   },
   {
+    name: "custos",
+    description:
+      "Plugin-based authentication for Ruby on Rails — flexible, provider-agnostic auth with a clean plugin architecture",
+    tags: ["Ruby", "Rails"],
+    link: "https://github.com/supostat/Custos",
+  },
+  {
+    name: "rft",
+    description:
+      "Zero-config Docker Compose isolation for git worktrees — detects compose files, allocates non-conflicting ports, manages stacks",
+    tags: ["Rust", "Docker", "CLI"],
+    link: "https://github.com/supostat/rft-cli",
+  },
+  {
     name: "PROJECT_02",
     description: "",
     tags: ["CLASSIFIED"],
