@@ -1,10 +1,11 @@
 import { AsciiHeader } from "@/components/ascii-header";
 import { ContactList } from "@/components/contact-list";
-import { PostList, type Post } from "@/components/post-list";
+import { PostList } from "@/components/post-list";
 import { ProjectList } from "@/components/project-list";
 import { Screen } from "@/components/screen";
 import { StatusBar } from "@/components/status-bar";
 import { ManPage } from "@/components/man-page";
+import { getAllPosts } from "@/lib/posts";
 
 const PROJECTS = [
   {
@@ -30,7 +31,7 @@ const PROJECTS = [
   },
 ];
 
-const POSTS: Post[] = [];
+const POSTS = getAllPosts();
 
 const CONTACTS = [
   { label: "GITHUB", value: "github.com/supostat", href: "https://github.com/supostat" },

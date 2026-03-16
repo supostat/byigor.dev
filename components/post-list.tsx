@@ -1,10 +1,5 @@
 import Link from "next/link";
-
-export type Post = {
-  slug: string;
-  title: string;
-  date: string;
-};
+import type { Post } from "@/lib/posts";
 
 function PostRow({ post }: { post: Post }) {
   return (

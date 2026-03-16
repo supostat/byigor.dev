@@ -1,0 +1,362 @@
+---
+title: "Custos: Plugin-Based Authentication for Rails"
+date: "2025-06-15"
+description: "Modular auth with composable plugins, per-model config, and Argon2 — without the magic."
+slug: "custos-plugin-based-auth-for-rails"
+---
+
+Every Rails app needs authentication. The default choice is Devise — battle-tested, widely used, and deeply coupled to your entire application. Rodauth takes the opposite approach: pure Sequel, plugin architecture, but no Rails-native feel. And `has_secure_password` gives you a single column and a prayer.
+
+Custos sits between these extremes. It's a plugin-based authentication library where you compose exactly the features you need — password auth, magic links, MFA, API tokens — through a per-model DSL that feels like Rails.
+
+## Why Another Auth Library
+
+The problem isn't that existing solutions are bad. It's that they force an all-or-nothing choice:
+
+| Problem | Devise | Rodauth | has_secure_password |
+|---|---|---|---|
+| Want just passwords? | Get controllers, routes, views, mailers | Get Sequel dependency | Get `authenticate` and nothing else |
+| Want MFA later? | Bolt on `devise-two-factor` | Built-in, but Sequel only | Build from scratch |
+| Two models, different auth? | `devise :database_authenticatable` on both | Separate configurations | Manual everything |
+
+Custos gives you a plugin registry where each feature is an independent module. You pick what you need at the model level. No controllers, no routes, no views — just services and helpers that you wire into your own application code.
+
+## Quick Start
+
+Add the gem and run the generators:
+
+```ruby title="Gemfile"
+gem "custos"
+```
+
+```bash
+bundle install
+rails generate custos:install
+rails generate custos:model User password magic_link lockout email_confirmation
+rails db:migrate
+```
+
+The install generator creates an initializer and the sessions migration. The model generator adds the columns and tables for each plugin you specify.
+
+Then configure your model:
+
+```ruby title="app/models/user.rb"
+class User < ApplicationRecord
+  include Custos::Authenticatable
+
+  custos do
+    plugin :password
+    plugin :magic_link
+    plugin :lockout
+    plugin :email_confirmation
+
+    on(:magic_link_created) do |record, token|
+      AuthMailer.magic_link(record, token).deliver_later
+    end
+
+    on(:email_confirmation_requested) do |record, token|
+      AuthMailer.confirm_email(record, token).deliver_later
+    end
+  end
+end
+```
+
+That's it. No inherited controllers, no route macros, no hidden initializers.
+
+## Architecture
+
+```
++--------------------------------------------------+
+|            Your Application                      |
+|  Controllers  Mailers  Jobs  Views               |
++--------------+-----------------------------------+
+|              |     Custos Core                   |
+|  Controller  |  SessionManager                   |
+|  Helpers     |  TokenGenerator (HMAC-SHA256)     |
+|              |  CallbackRegistry                 |
+|              |  ModelConfig (per-model DSL)      |
+|              |  MfaEncryptor (AES-256-GCM)       |
++--------------+-----------------------------------+
+|            Plugin Layer                          |
+|  :password  :magic_link  :api_tokens  :mfa       |
+|  :lockout   :email_confirmation  :remember_me    |
++--------------------------------------------------+
+```
+
+Key design decisions:
+
+> **No controllers or routes.** Custos provides services and helpers. You write the controllers. This means no route conflicts, no view overrides, and no "how do I customize the registration flow?" questions.
+
+> **Delivery through callbacks.** Need to send a magic link email? Register a callback with `on(:magic_link_created)`. Custos fires the event with the record and raw token — you decide how to deliver it.
+
+## Plugin System
+
+Each plugin is a Ruby module with a single entry point:
+
+```ruby
+module Custos
+  module Plugins
+    module Password
+      def self.apply(model_class, **options)
+        # Add methods, validations, columns to model_class
+      end
+    end
+  end
+end
+```
+
+Plugins are registered in the global registry and applied through the per-model DSL. The minimal configuration is just the plugin name:
+
+```ruby
+custos do
+  plugin :password
+end
+```
+
+Every plugin accepts options for customization:
+
+```ruby
+custos do
+  plugin :password,
+    min_length: 12,
+    require_uppercase: true,
+    require_digit: true,
+    require_special: true
+
+  plugin :magic_link,
+    expiry: 600,
+    cooldown: 120
+
+  plugin :lockout,
+    max_attempts: 5,
+    lockout_duration: 3600
+
+  plugin :email_confirmation,
+    confirmation_expiry: 172_800
+end
+```
+
+Options are stored in `ModelConfig` and accessible to each plugin via `plugin_options(:plugin_name)`.
+
+## Per-Model Configuration
+
+Different models can have completely different authentication strategies. This is where Custos diverges from Devise's "same modules for everyone" approach.
+
+```ruby title="app/models/user.rb"
+class User < ApplicationRecord
+  include Custos::Authenticatable
+
+  custos do
+    plugin :password
+    plugin :magic_link
+    plugin :email_confirmation
+    plugin :remember_me
+
+    on(:magic_link_created) do |record, token|
+      AuthMailer.magic_link(record, token).deliver_later
+    end
+  end
+end
+```
+
+```ruby title="app/models/api_client.rb"
+class ApiClient < ApplicationRecord
+  include Custos::Authenticatable
+
+  custos do
+    plugin :api_tokens, default_expiry: 7776000
+  end
+end
+```
+
+```ruby title="app/models/admin.rb"
+class Admin < User
+  custos do
+    plugin :password,
+      min_length: 16,
+      require_uppercase: true,
+      require_digit: true
+
+    plugin :mfa
+    plugin :lockout, max_attempts: 3
+  end
+end
+```
+
+STI works naturally — `Admin` inherits `User`'s plugin config and overrides what it needs. The `custos_config` is resolved per-class.
+
+## Security
+
+Custos was audited before release. Every token-handling decision has a specific threat it mitigates:
+
+| Mechanism | Implementation | Threat |
+|---|---|---|
+| Password hashing | Argon2id via `argon2` gem | Rainbow tables, brute force |
+| Token storage | HMAC-SHA256 digest, never plaintext | DB leak → token compromise |
+| Timing protection | Dummy Argon2 verify on missing user | User enumeration via timing |
+| MFA secrets | AES-256-GCM encryption at rest | DB leak → TOTP seed compromise |
+| Lockout | Atomic SQL (`UPDATE ... CASE WHEN`) | Race condition on concurrent attempts |
+| Token comparison | `ActiveSupport::SecurityUtils.secure_compare` | Timing side-channel |
+| Backup codes | `SecureRandom.hex(6)` = 48-bit entropy | Brute force guessing |
+
+<Callout type="security">
+Token digests use HMAC-SHA256 with a configurable secret, not plain SHA256. The secret defaults to `Rails.application.secret_key_base` but can be set explicitly via `Custos.configuration.token_secret`. If neither is available, Custos raises an error at boot time.
+</Callout>
+
+### Password Authentication Flow
+
+```ruby
+# Registration
+user = User.new(email: "alice@example.com")
+user.password = "correct-horse-battery-staple"
+user.save!
+
+# Authentication
+user = User.find_by_email_and_password(
+  email: "alice@example.com",
+  password: "correct-horse-battery-staple"
+)
+# => #<User id: 1> or nil
+
+# Session creation
+session, token = Custos::SessionManager.create(user, request: request)
+cookies.signed[:custos_session_token] = {
+  value: token, httponly: true, same_site: :lax
+}
+```
+
+`find_by_email_and_password` runs `Argon2::Password.verify_password` against the stored digest. If the user doesn't exist, it runs a dummy verify against a precomputed hash to prevent timing-based user enumeration.
+
+## Hooks and Callbacks
+
+Custos has two event systems:
+
+**Callbacks** are user-facing. You register them with `on(:event)` in the model DSL. They're for sending emails, logging, analytics — anything your application needs to do in response to an auth event.
+
+```ruby
+custos do
+  on(:email_confirmed) do |record|
+    WelcomeMailer.send_welcome(record).deliver_later
+  end
+end
+```
+
+**Hooks** are internal. Plugins use them to communicate with each other. The Lockout plugin registers hooks on `:after_authentication` and `:after_mfa_verification` to track failed attempts:
+
+```ruby
+# Inside Lockout plugin — simplified
+model_class.custos_config.hook(:after_authentication) do |record, success|
+  if success
+    record.reset_failed_attempts!
+  else
+    record.record_failed_attempt!
+  end
+end
+```
+
+When Password calls `fire_hooks(:after_authentication, user, false)` on a failed login, Lockout increments the counter. When MFA calls `fire_hooks(:after_mfa_verification, user, false)`, Lockout tracks MFA failures separately. Neither plugin knows about the other.
+
+## Session Management
+
+Sessions are stored in their own table with HMAC-digested tokens:
+
+```ruby
+# Create
+session, token = Custos::SessionManager.create(user, request: request)
+
+# Retrieve
+session = Custos::SessionManager.find_by_token(token)
+
+# Revoke one session
+Custos::SessionManager.revoke(session)
+
+# Revoke all sessions for a user
+Custos::SessionManager.revoke_all(user)
+
+# List active sessions
+sessions = Custos::SessionManager.active_for(user)
+```
+
+Each session records `ip_address`, `user_agent`, and `last_active_at`. Sessions auto-expire based on `Custos.configuration.session_expiry` (default: 24 hours).
+
+### Controller Integration
+
+```ruby title="app/controllers/application_controller.rb"
+class ApplicationController < ActionController::Base
+  include Custos::ControllerHelpers
+
+  rescue_from Custos::NotAuthenticatedError do
+    redirect_to login_path, alert: "Please sign in."
+  end
+
+  def current_user
+    custos_current(scope: :user)
+  end
+  helper_method :current_user
+end
+```
+
+`custos_authenticate!` raises `NotAuthenticatedError` if no valid session is found. `custos_current` returns the authenticated record (cached per-request). Token extraction is automatic — it checks `cookies.signed[:custos_session_token]` first, then the `Authorization: Bearer` header.
+
+## Custom Plugins
+
+Creating a plugin is straightforward. A plugin is a module with `self.apply(model_class, **options)`:
+
+```ruby title="lib/custos/plugins/audit_log.rb"
+module Custos
+  module Plugins
+    module AuditLog
+      def self.apply(model_class, **options)
+        table_name = options.fetch(:table_name, :custos_audit_logs)
+        log_model = Class.new(ActiveRecord::Base) do
+          self.table_name = table_name
+        end
+
+        model_class.custos_config.hook(:after_authentication) do |record, success|
+          log_model.create!(
+            authenticatable_type: record.class.name,
+            authenticatable_id: record.id,
+            event: "authentication",
+            metadata: { success: success }.to_json,
+            created_at: Time.current
+          )
+        end
+      end
+    end
+  end
+end
+
+Custos::Plugin.register(:audit_log, Custos::Plugins::AuditLog)
+```
+
+Then use it like any built-in plugin:
+
+```ruby
+custos do
+  plugin :audit_log, table_name: :auth_events
+end
+```
+
+## Comparison
+
+| Feature | Custos | Devise | Rodauth | has_secure_password |
+|---|---|---|---|---|
+| Architecture | Plugin composition | Monolithic modules | Plugin composition | Single concern |
+| ORM | ActiveRecord | ActiveRecord | Sequel (primary) | ActiveRecord |
+| Controllers | None (you build them) | Generated | Rodauth routes | None |
+| Per-model config | Native DSL | Limited | Separate configs | N/A |
+| Password hashing | Argon2id | bcrypt | bcrypt (default) | bcrypt |
+| MFA | Built-in plugin | Separate gem | Built-in plugin | None |
+| Session storage | Own table (HMAC) | Rails session | Own table | Rails session |
+| API tokens | Built-in plugin | Separate gem | Not built-in | None |
+| Token security | HMAC-SHA256 digest | Varies | Digest | N/A |
+
+## Getting Started
+
+Custos is available on GitHub:
+
+> **[github.com/supostat/Custos](https://github.com/supostat/Custos)** — source code, documentation, and examples.
+
+The `example/` directory contains a full Rails application demonstrating multi-model auth with Password, MFA, Lockout, and a custom AuditLog plugin.
+
+If you're starting a new Rails project or tired of fighting Devise's opinions, give Custos a try. It won't make decisions for you — that's the point.
