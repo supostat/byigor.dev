@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { BootSequence } from "@/components/boot-sequence";
+import { PageShell } from "@/components/page-shell";
 
 export function Screen({ children }: { children: React.ReactNode }) {
   const [booted, setBooted] = useState(false);
@@ -11,7 +12,7 @@ export function Screen({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <div className="relative z-[1] mx-auto flex min-h-screen max-w-[860px] animate-[flicker_8s_infinite] flex-col justify-center px-4 py-10 sm:px-6 sm:py-20">
+    <PageShell className="justify-center">
       <BootSequence onComplete={handleBootComplete} />
 
       <div
@@ -19,6 +20,6 @@ export function Screen({ children }: { children: React.ReactNode }) {
       >
         {children}
       </div>
-    </div>
+    </PageShell>
   );
 }
